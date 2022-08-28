@@ -5,12 +5,40 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@v2
-      - name: build_and_deploy
-        uses: shalzz/zola-deploy-action@v0.14.1
-        env:
-          # Target branch
-          PAGES_BRANCH: gh-pages
-          # Provide personal access token
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install Zola
+        run: |
+          wget -q -O - "https://github.com/getzola/zola/releases/download/v0.16.1/zola-v0.16.1-x86_64-unknown-linux-gnu.tar.gz" | tar xzf - -C /usr/local/bin
+      - name: Build
+        run: |
+          echo "Using $(zola --version)"
+
+          echo "Building in $BUILD_DIR directory"
+          cd "$BUILD_DIR"
+
+          echo Building with flags: ${BUILD_FLAGS:+"$BUILD_FLAGS"}
+          zola build ${BUILD_FLAGS:+$BUILD_FLAGS}
+      - name: Pack
+        run: |
+          tar --dereference --hard-dereference --directory public -cvf ${{ runner.temp }}/artifact.tar \
+          --exclude=.git --exclude=.github .
+      - name: Upload artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
