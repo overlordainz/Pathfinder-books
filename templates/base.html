@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+{% if page is undefined %}
+  {% set page = section %}
+{% endif %}
+
 <html lang="en">
 
 <head>
@@ -12,6 +16,21 @@
       {% block content %} {% endblock %}
     </div>
   </section>
+  
+  <nav id="navbar">
+    {% for a in page.ancestors %}
+      {% set parent = get_section(path=a, metadata_only=true) %}
+      <a href="{{parent.permalink}}" class="parent">{{parent.title | default(value=parent.relative_path)}}</a> &raquo;<br>
+    {% endfor %}
+    <a href="{{page.permalink}}" class="sibling self">{{page.title}}</a><br>
+    {% if section %}
+      {% for child in section.pages %}
+        <a href="{{child.permalink}}" class="child">{{child.title | default(value=child.relative_path)}}</a><br>
+      {% endfor %}
+    {% endif %}
+  </nav>
+
+  <footer></footer>
 </body>
 
 </html>
