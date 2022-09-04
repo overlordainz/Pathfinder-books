@@ -24,13 +24,17 @@
     {% endfor %}
     <a href="{{page.permalink}}" class="sibling self">{{page.title}}</a><br>
     {% if section %}
+      {% for csn in section.subsections %}
+        {% set cs = get_section(path=csn, metadata_only=true) %}
+        <a href="{{cs.permalink}}" class="child-section">{{cs.title | default(value=cs.relative_path)}}</a><br>
+      {% endfor %}
       {% for child in section.pages %}
-        <a href="{{child.permalink}}" class="child">{{child.title | default(value=child.relative_path)}}</a><br>
+        <a href="{{child.permalink}}" class="child-page">{{child.title | default(value=child.relative_path)}}</a><br>
       {% endfor %}
     {% endif %}
   </nav>
 
-  <footer></footer>
+  <footer><pre>{{ __tera_context|escape|safe }}</pre></footer>
 </body>
 
 </html>
